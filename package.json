@@ -1,0 +1,26 @@
+{
+  "name": "y",
+  "version": "0.0.0",
+  "description": "Login by attestation",
+  "main": "index.js",
+  "dependencies": {
+    "noise-handshake": "^1.0.0",
+    "sodium-native": "^3.2.1",
+    "standard": "^16.0.3",
+    "tape": "^5.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "npx standard && tape test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chm-diederichs/attest-auth.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chm-diederichs/attest-auth/issues"
+  },
+  "homepage": "https://github.com/chm-diederichs/attest-auth#readme"
+}
