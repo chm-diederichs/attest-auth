@@ -14,7 +14,12 @@ module.exports = class {
     const challenge = Buffer.allocUnsafe(32)
     sodium.randombytes_buf(challenge)
 
-    const session = new Login({ challenge, description, timeout })
+    const session = new ServerLogin({
+      challenge,
+      description,
+      timeout
+    })
+
     this.sessions.set(challenge.toString('hex'), session)
 
     setTimeout(this._gc, timeout, session)
@@ -27,24 +32,16 @@ module.exports = class {
     handshake.initialise(PROLOGUE)
 
     const challenge = handshake.recv(request)
-    const session = this.sessions.get(challenge.toString('hex'))
+    const identifier = challenge.toString('hex')
+    const session = this.sessions.get(identifier)
 
     if (session == null) {
-      throw new Error("Login info not recognised.")
+      throw new Error('Login info not recognised')
     }
 
-    this.sessions.delete(challenge.toString('hex'))
+    this.sessions.delete(identifier)
 
-    const pk = handshake.rs
-    const response = JSON.stringify({
-      type: "login",
-      publicKey: pk.toString('hex')
-    })
-
-    session.publicKey = pk
-    session.response = handshake.send(Buffer.from(response))
-  
-    session.emit('verify', pk)
+    session.respond(handshake.rs, handshake)
     return session
   }
 
@@ -53,14 +50,11 @@ module.exports = class {
 
     handshake.initialise(PROLOGUE, serverPk)
 
-    const login = new Login({
+    return new ClientLogin({
       handshake,
       challenge,
       remotePublicKey: serverPk,
     })
-
-    login.request = handshake.send(challenge)
-    return login
   }
 
   _gc (login) {
@@ -68,26 +62,48 @@ module.exports = class {
   }
 }
 
-class Login extends EventEmitter {
-  constructor ({ challenge, description, handshake }) {
+class ClientLogin extends EventEmitter {
+  constructor ({ challenge, handshake, remotePublicKey }) {
     super()
 
-    this.description = description
     this.challenge = challenge
     this.handshake = handshake
+    this.remotePublicKey = remotePublicKey
 
-    this.response = null
-    this.request = null
-    this.publicKey = null
+    this.request = this.handshake.send(challenge)
   }
 
   verify (response) {
     try {
       const msg = JSON.parse(this.handshake.recv(response))
-      this.emit('verify', this.publicKey)
+      this.emit('verify', msg)
     } catch (err) {
-      console.log(err)
-      return response
+      this.emit('error', err)
     }
+  }
+}
+
+class ServerLogin extends EventEmitter {
+  constructor ({ challenge, description }) {
+    super()
+
+    this.challenge = challenge
+    this.description = description
+
+    this.response = null
+    this.publicKey = null
+  }
+
+  respond (pk, handshake) {
+    this.publicKey = pk
+
+    const response = Buffer.from(JSON.stringify({
+      type: "login",
+      publicKey: pk.toString('hex'),
+      description: this.description
+    }))
+
+    this.response = handshake.send(response)
+    this.emit('verify', pk)
   }
 }

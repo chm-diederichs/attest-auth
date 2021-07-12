@@ -28,8 +28,8 @@ serverLogin.on('verify', function () {
 // user passes challenge somehow to auth device
 
 const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge)
-trustedLogin.on('verify', function () {
-  console.log(trustedLogin.publicKey, 'logged in!')
+trustedLogin.on('verify', function (info) {
+  console.log(info.publicKey.slice(0, 8), 'logged in!')
 
   const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge)
   serverLogin = server.verify(failedLogin.request) // throw error
