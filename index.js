@@ -5,9 +5,10 @@ const { EventEmitter} = require('events')
 const PROLOGUE = Buffer.alloc(0)
 
 module.exports = class {
-  constructor (keypair) {
+  constructor (keypair, opts = {}) {
     this.sessions = new Map()
     this.keypair = keypair
+    this.opts = opts
   }
 
   createServerLogin ({ timeout, description }) {
@@ -28,10 +29,11 @@ module.exports = class {
   }
 
   verify (request) {
-    const handshake = new Noise('IK', false, this.keypair)
-    handshake.initialise(PROLOGUE)
+    const handshake = new Noise('IK', false, this.keypair, this.opts)
 
+    handshake.initialise(PROLOGUE)
     const challenge = handshake.recv(request)
+
     const identifier = challenge.toString('hex')
     const session = this.sessions.get(identifier)
 
@@ -45,8 +47,8 @@ module.exports = class {
     return session
   }
 
-  static createClientLogin (keypair, serverPk, challenge) {
-    const handshake = new Noise('IK', true, keypair)
+  static createClientLogin (keypair, serverPk, challenge, opts = {}) {
+    const handshake = new Noise('IK', true, keypair, opts)
 
     handshake.initialise(PROLOGUE, serverPk)
 

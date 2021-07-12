@@ -1,20 +1,11 @@
 const Authenticator = require('./')
+const secp = require('noise-handshake/secp256k1-dh')
 const sodium = require('sodium-native')
 
-const keypair = {
-  pub: Buffer.alloc(32),
-  priv: Buffer.alloc(32)
-}
+const keypair = secp.generateKeypair()
+const serverKeys = secp.generateKeypair()
 
-const serverKeys = {
-  pub: Buffer.alloc(32),
-  priv: Buffer.alloc(32)
-}
-
-sodium.crypto_kx_keypair(keypair.pub, keypair.priv)
-sodium.crypto_kx_keypair(serverKeys.pub, serverKeys.priv)
-
-const server = new Authenticator(serverKeys)
+const server = new Authenticator(serverKeys, { curve: secp })
 
 let serverLogin = server.createServerLogin({
   timeout: 2 * 60 * 1000,
@@ -27,11 +18,11 @@ serverLogin.on('verify', function () {
 
 // user passes challenge somehow to auth device
 
-const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge)
+const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve: secp })
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!')
 
-  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge)
+  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve: secp })
   serverLogin = server.verify(failedLogin.request) // throw error
 })
 
