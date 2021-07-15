@@ -12,6 +12,7 @@ module.exports = class {
   }
 
   createServerLogin ({ timeout, description }) {
+    const self = this
     const challenge = Buffer.allocUnsafe(32)
     sodium.randombytes_buf(challenge)
 
@@ -23,7 +24,7 @@ module.exports = class {
 
     this.sessions.set(challenge.toString('hex'), session)
 
-    setTimeout(this._gc, timeout, session)
+    setTimeout(self._gc, timeout, session)
 
     return session
   }
