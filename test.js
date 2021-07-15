@@ -22,15 +22,24 @@ const trustedLogin = Authenticator.createClientLogin(
   keypair,
   serverKeys.pub,
   serverLogin.challenge,
-  { curve: secp }
+  {
+    curve,
+    metadata: Buffer.from('abcdef', 'hex')
+  }
 )
 
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!')
 
-  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve: secp })
+  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve })
   serverLogin = server.verify(failedLogin.request) // throw error
 })
 
-serverLogin = server.verify(trustedLogin.request)
+serverLogin = server.verify(trustedLogin.request, {
+  metadata: Buffer.from('123456', 'hex')
+})
 trustedLogin.verify(serverLogin.response)
+
+console.log('server client', serverLogin.clientMetadata)
+console.log('server server', serverLogin.serverMetadata)
+console.log('client client', trustedLogin.metadata)
