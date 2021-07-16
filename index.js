@@ -5,7 +5,7 @@ const { EventEmitter } = require('events')
 const PROLOGUE = Buffer.alloc(0)
 const CHALLENGE_LENGTH = 32
 
-module.exports = class {
+module.exports = class AttestAuth {
   constructor (keypair, opts = {}) {
     this.sessions = new Map()
     this.keypair = keypair
@@ -69,7 +69,10 @@ module.exports = class {
   }
 
   _gc (login) {
-    this.sessions.delete(login.challenge.toString('hex'))
+    const id = login.challenge.toString('hex')
+    if (!this.sessions.has(id)) return
+    this.sessions.get(id)._destroy(new Error('Login timeout.'))
+    this.sessions.delete(id)
   }
 }
 
@@ -93,10 +96,11 @@ class ClientLogin extends EventEmitter {
   verify (response) {
     try {
       this.response = JSON.parse(this.handshake.recv(response))
-      this.emit('verify', this.response)
     } catch (err) {
       this.emit('error', err)
+      return
     }
+    this.emit('verify', this.response)
   }
 }
 
@@ -112,6 +116,8 @@ class ServerLogin extends EventEmitter {
 
     this.clientMetadata = null
     this.serverMetadata = null
+
+    this.destroyed = false
   }
 
   respond (pk, handshake, metadata) {
@@ -130,5 +136,10 @@ class ServerLogin extends EventEmitter {
 
     this.response = handshake.send(response)
     this.emit('verify', pk)
+  }
+
+  _destroy (err) {
+    this.destroyed = true
+    this.emit('error', err)
   }
 }
