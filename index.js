@@ -25,7 +25,8 @@ module.exports = class AttestAuth {
 
     this.sessions.set(challenge.toString('hex'), session)
 
-    setTimeout(this._gc.bind(this), timeout, session)
+    const timer = setTimeout(this._gc.bind(this), timeout, session)
+    session.on('verify', clearTimeout, timer)
 
     return session
   }
