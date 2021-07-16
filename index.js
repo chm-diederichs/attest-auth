@@ -1,5 +1,5 @@
 const Noise = require('noise-handshake')
-const sodium = require('sodium-native')
+const sodium = require('sodium-universal')
 const { EventEmitter } = require('events')
 
 const PROLOGUE = Buffer.alloc(0)
