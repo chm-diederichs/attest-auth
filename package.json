@@ -1,6 +1,6 @@
 {
   "name": "attest-auth",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Login by attestation",
   "main": "index.js",
   "dependencies": {
