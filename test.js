@@ -1,9 +1,8 @@
 const Authenticator = require('./')
 const curve = require('noise-handshake/dh')
-const sodium = require('sodium-native')
 
-const keypair = curve.generateKeypair()
-const serverKeys = curve.generateKeypair()
+const keypair = curve.generateKeyPair()
+const serverKeys = curve.generateKeyPair()
 
 const server = new Authenticator(serverKeys, { curve })
 
@@ -20,7 +19,7 @@ serverLogin.on('verify', function () {
 
 const trustedLogin = Authenticator.createClientLogin(
   keypair,
-  serverKeys.pub,
+  serverKeys.publicKey,
   serverLogin.challenge,
   {
     curve,
@@ -31,7 +30,7 @@ const trustedLogin = Authenticator.createClientLogin(
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!')
 
-  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve })
+  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.publicKey, serverLogin.challenge, { curve })
   serverLogin = server.verify(failedLogin.request) // throw error
 })
 

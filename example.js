@@ -1,8 +1,8 @@
 const Authenticator = require('./')
-const secp = require('noise-handshake/secp256k1-dh')
+const secp = require('noise-handshake/dh')
 
-const keypair = secp.generateKeypair()
-const serverKeys = secp.generateKeypair()
+const keypair = secp.generateKeyPair()
+const serverKeys = secp.generateKeyPair()
 
 const server = new Authenticator(serverKeys, { curve: secp })
 
@@ -16,7 +16,7 @@ serverLogin.on('verify', function () {
 })
 
 // User passes challenge somehow to auth device
-const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve: secp })
+const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.publicKey, serverLogin.challenge, { curve: secp })
 
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!', info)
