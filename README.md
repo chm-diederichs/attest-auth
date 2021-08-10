@@ -12,8 +12,8 @@ npm install attest-auth
 const Authenticator = require('attest-auth')
 const curve = require('noise-handshake/dh')
 
-const keypair = curve.generateKeypair()
-const serverKeys = curve.generateKeypair()
+const keypair = curve.generateKeyPair()
+const serverKeys = curve.generateKeyPair()
 
 const server = new Authenticator(serverKeys, { curve })
 
