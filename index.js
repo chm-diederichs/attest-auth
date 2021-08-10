@@ -77,10 +77,8 @@ module.exports = class AttestAuth {
   }
 }
 
-class ClientLogin extends EventEmitter {
+class ClientLogin {
   constructor ({ challenge, handshake, remotePublicKey, metadata }) {
-    super()
-
     this.challenge = challenge
     this.handshake = handshake
     this.remotePublicKey = remotePublicKey
@@ -96,12 +94,10 @@ class ClientLogin extends EventEmitter {
 
   verify (response) {
     try {
-      this.response = JSON.parse(this.handshake.recv(response))
+      return JSON.parse(this.handshake.recv(response))
     } catch (err) {
-      this.emit('error', err)
-      return
+      return { err }
     }
-    this.emit('verify', this.response)
   }
 }
 
