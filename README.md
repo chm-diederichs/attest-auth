@@ -30,13 +30,8 @@ const challengeInfo = serverLogin.getChallenge()
 
 // User passes challenge somehow to auth device
 const metadata = Buffer.from('put metadata here.')
-const auth = Authenticator.parseChallenge(challengeInfo)
 
-if (auth.curve === 'secp256k1') {
-  // select appropriate curve
-}
-
-const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, auth.challenge, { curve, metadata })
+const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, challengeInfo, { curve, metadata })
 
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!', info)
@@ -85,18 +80,6 @@ Emitted when the login fails or times out.
 
 Populated after the client has verified the login.
 
-#### `challengeInfo = Authenticator.parseChallengee(challengeMessage)`
-
-Parse a challenge sent by the server to get the parameters needed to instantiate the Client.
-
-Returns the following object:
-```js
-{
-  curve,    // indicates curve to be used for dh
-  challenge  // unique challenge sent by server
-}
-```
-
 #### `trustedLogin = Authenticator.createClientLogin(clientKeyPair, serverPublicKey, challenge, [options])`
 
 Created a client login pointing to the server and the challenge.
@@ -104,7 +87,7 @@ Created a client login pointing to the server and the challenge.
 `options` object takes the following parameters:
 ```js
 {
-  curve,    // specify curve to be used for dh, must be noise-handshake compliant
+  curve,    // specify a curve/an array of curves to be used for dh, must be noise-handshake compliant
   metadata  // optional metadata to be passed as a buffer
 }
 ```

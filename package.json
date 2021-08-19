@@ -12,7 +12,9 @@
     "standard": "^16.0.3",
     "tape": "^5.2.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "noise-curve-ed": "^1.0.2"
+  },
   "scripts": {
     "test": "npx standard && tape test"
   },

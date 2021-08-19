@@ -1,5 +1,5 @@
 const Authenticator = require('./')
-const curve = require('noise-handshake/dh')
+const curve = require('noise-curve-ed')
 
 const keypair = curve.generateKeyPair()
 const serverKeys = curve.generateKeyPair()
@@ -15,13 +15,13 @@ serverLogin.on('verify', function () {
   console.log(serverLogin.publicKey.slice(0, 4).toString('hex'), 'logged in!')
 })
 
-// user passes challenge somehow to auth device
+const challenge = serverLogin.getChallenge()
 
-const auth = Authenticator.parseChallenge(serverLogin.getChallenge())
+// user passes challenge somehow to auth device
 const trustedLogin = Authenticator.createClientLogin(
   keypair,
   serverKeys.publicKey,
-  auth.challenge,
+  challenge,
   {
     curve,
     metadata: Buffer.from('abcdef', 'hex')
@@ -31,7 +31,7 @@ const trustedLogin = Authenticator.createClientLogin(
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!')
 
-  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.publicKey, auth.challenge, { curve })
+  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.publicKey, challenge, { curve })
   serverLogin = server.verify(failedLogin.request) // throw error
 })
 

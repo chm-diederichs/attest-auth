@@ -65,18 +65,26 @@ module.exports = class AttestAuth {
     return session
   }
 
-  static parseChallenge (serverMessage) {
-    return c.decode(serverChallenge, serverMessage)
-  }
-
   static createClientLogin (keypair, serverPk, challenge, opts = {}) {
-    const handshake = new Noise('IK', true, keypair, opts)
+    const auth = c.decode(serverChallenge, challenge)
 
+    let curve
+    if (Array.isArray(opts.curve)) {
+      curve = opts.curve.find(c => c.name === auth.curve)
+    } else {
+      curve = opts.curve.name === auth.curve ? opts.curve : null
+    }
+
+    if (!curve && auth.curve !== 'Ed25519') {
+      throw new Error('No suitable curve provided for:', auth.curve)
+    }
+
+    const handshake = new Noise('IK', true, keypair, { curve })
     handshake.initialise(PROLOGUE, serverPk)
 
     return new ClientLogin({
       handshake,
-      challenge,
+      challenge: auth.challenge,
       remotePublicKey: serverPk,
       metadata: opts.metadata
     })
