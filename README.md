@@ -26,9 +26,17 @@ serverLogin.on('verify', function () {
   console.log(serverLogin.publicKey.slice(0, 4).toString('hex'), 'logged in!')
 })
 
+const challengeInfo = serverLogin.getChallenge()
+
 // User passes challenge somehow to auth device
 const metadata = Buffer.from('put metadata here.')
-const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, serverLogin.challenge, { curve, metadata })
+const auth = Authenticator.parseChallenge(challengeInfo)
+
+if (auth.curve === 'secp256k1') {
+  // select appropriate curve
+}
+
+const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, auth.challenge, { curve, metadata })
 
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!', info)
@@ -61,7 +69,7 @@ Make a server login instance.
 }
 ```
 
-#### `serverLogin.challenge`
+#### `const challengeMessage = serverLogin.getChallenge()`
 
 Pass this challenge to the client to login
 
@@ -76,6 +84,18 @@ Emitted when the login fails or times out.
 #### `serverLogin.publicKey`
 
 Populated after the client has verified the login.
+
+#### `challengeInfo = Authenticator.parseChallengee(challengeMessage)`
+
+Parse a challenge sent by the server to get the parameters needed to instantiate the Client.
+
+Returns the following object:
+```js
+{
+  curve,    // indicates curve to be used for dh
+  challenge  // unique challenge sent by server
+}
+```
 
 #### `trustedLogin = Authenticator.createClientLogin(clientKeyPair, serverPublicKey, challenge, [options])`
 
