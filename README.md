@@ -10,12 +10,13 @@ npm install attest-auth
 
 ```js
 const Authenticator = require('attest-auth')
-const curve = require('noise-handshake/dh')
+const ed25519 = require('noise-curve-ed')
+const secp256k1 = require('noise-curve-secp')
 
-const keypair = curve.generateKeyPair()
-const serverKeys = curve.generateKeyPair()
+const keypair = ed25519.generateKeyPair()
+const serverKeys = ed25519.generateKeyPair()
 
-const server = new Authenticator(serverKeys, { curve })
+const server = new Authenticator(serverKeys, { curve: ed25519 })
 
 let serverLogin = server.createServerLogin({
   timeout: 2 * 60 * 1000,
@@ -31,6 +32,7 @@ const challengeInfo = serverLogin.getChallenge()
 // User passes challenge somehow to auth device
 const metadata = Buffer.from('put metadata here.')
 
+const curve = [ed25519, secp256k1]
 const trustedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, challengeInfo, { curve, metadata })
 
 trustedLogin.on('verify', function (info) {
@@ -46,6 +48,14 @@ console.log(serverLogin.clientMetadata.toString()) // put metadata here.
 // Pass the server response back so the trustedLogin knows it worked as well
 trustedLogin.verify(serverLogin.response)
 ```
+
+## Curve Modules
+
+Different curves may be used in the handshake. Handshakes expect curve modules that satisfy the `noise-curve` interface.
+
+Existing modules:
+- Ed25519: [noise-curve-ed](https://github.com/chm-diederichs/noise-curve-ed)
+- secp256k1: [noise-curve-secp](https://github.com/chm-diederichs/noise-curve-secp256k1)
 
 ## API
 
