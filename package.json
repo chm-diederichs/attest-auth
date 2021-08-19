@@ -4,6 +4,8 @@
   "description": "Login by attestation",
   "main": "index.js",
   "dependencies": {
+    "compact-encoding": "^2.4.1",
+    "compact-encoding-struct": "0.0.1",
     "noise-handshake": "^1.0.0",
     "qrcode-terminal": "^0.12.0",
     "sodium-native": "^3.2.1",

@@ -1,9 +1,16 @@
 const Noise = require('noise-handshake')
 const sodium = require('sodium-universal')
+const c = require('compact-encoding')
+const { compile } = require('compact-encoding-struct')
 const { EventEmitter } = require('events')
 
 const PROLOGUE = Buffer.alloc(0)
 const CHALLENGE_LENGTH = 32
+
+const serverChallenge = compile({
+  curve: c.string,
+  challenge: c.fixed32
+})
 
 module.exports = class AttestAuth {
   constructor (keypair, opts = {}) {
@@ -17,10 +24,12 @@ module.exports = class AttestAuth {
     const challenge = Buffer.allocUnsafe(this.challengeLength)
     sodium.randombytes_buf(challenge)
 
+    const curveTag = this.opts.curve.tag || 'ed25519'
+
     const session = new ServerLogin({
       challenge,
-      description,
-      timeout
+      curveTag,
+      description
     })
 
     this.sessions.set(challenge.toString('hex'), session)
@@ -54,6 +63,10 @@ module.exports = class AttestAuth {
 
     session.respond(handshake.rs, handshake)
     return session
+  }
+
+  static parseChallenge (serverMessage) {
+    return c.decode(serverChallenge, serverMessage)
   }
 
   static createClientLogin (keypair, serverPk, challenge, opts = {}) {
@@ -106,9 +119,10 @@ class ClientLogin extends EventEmitter {
 }
 
 class ServerLogin extends EventEmitter {
-  constructor ({ challenge, description }) {
+  constructor ({ challenge, curveTag, description }) {
     super()
 
+    this.curveTag = curveTag
     this.challenge = challenge
     this.description = description
 
@@ -119,6 +133,13 @@ class ServerLogin extends EventEmitter {
     this.serverMetadata = null
 
     this.destroyed = false
+  }
+
+  getChallenge () {
+    return c.encode(serverChallenge, {
+      curve: this.curveTag,
+      challenge: this.challenge
+    })
   }
 
   respond (pk, handshake, metadata) {

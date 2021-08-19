@@ -17,10 +17,11 @@ serverLogin.on('verify', function () {
 
 // user passes challenge somehow to auth device
 
+const auth = Authenticator.parseChallenge(serverLogin.getChallenge())
 const trustedLogin = Authenticator.createClientLogin(
   keypair,
-  serverKeys.publicKey,
-  serverLogin.challenge,
+  serverKeys.pub,
+  auth.challenge,
   {
     curve,
     metadata: Buffer.from('abcdef', 'hex')
@@ -30,7 +31,7 @@ const trustedLogin = Authenticator.createClientLogin(
 trustedLogin.on('verify', function (info) {
   console.log(info.publicKey.slice(0, 8), 'logged in!')
 
-  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.publicKey, serverLogin.challenge, { curve })
+  const failedLogin = Authenticator.createClientLogin(keypair, serverKeys.pub, auth.challenge, { curve })
   serverLogin = server.verify(failedLogin.request) // throw error
 })
 
