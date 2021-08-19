@@ -24,7 +24,7 @@ module.exports = class AttestAuth {
     const challenge = Buffer.allocUnsafe(this.challengeLength)
     sodium.randombytes_buf(challenge)
 
-    const curveTag = this.opts.curve.tag || 'ed25519'
+    const curveTag = this.opts.curve.name || 'ed25519'
 
     const session = new ServerLogin({
       challenge,
